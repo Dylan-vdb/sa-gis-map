@@ -19,7 +19,6 @@ import AnimatedCluster from "ol-ext/layer/AnimatedCluster";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import VectorSource from "ol/source/Vector";
-import VectorLayer from "ol/layer/Vector";
 import Cluster from "ol/source/Cluster";
 import {
   Circle as CircleStyle,
@@ -31,7 +30,6 @@ import {
 } from "ol/style";
 
 import marker from "@/assets/map-pin.png";
-import markerShadow from "@/assets/marker-shadow.png";
 
 // Reference to hold the map instance
 const mapElement = ref(null);
@@ -54,16 +52,6 @@ const createFeatures = () => {
     return feature;
   });
 };
-
-const clusterSource = new VectorSource({
-  features: [], // Add your features here
-});
-
-// const animatedClusterLayer = new AnimatedCluster({
-//   source: clusterSource,
-//   animationDuration: 1000,
-//   distance: 20,
-// });
 
 const markerStyle = new Style({
   image: new Icon({
@@ -158,17 +146,9 @@ onMounted(() => {
     source: vectorSource,
   });
 
-  // Create vector layer with clusters
-  const vectorLayer = new VectorLayer({
-    source: clusterSource,
-    style: clusterStyle,
-    title: "Markers",
-    type: "overlay",
-  });
-
   const animatedClusterLayer = new AnimatedCluster({
     source: clusterSource,
-    animationDuration: 1000,
+    animationDuration: 700,
     style: clusterStyle,
     title: "Markers",
     distance: 20,
@@ -204,10 +184,6 @@ onMounted(() => {
 </style>
 
 <style>
-/* .ol-layerswitcher .panel-container {
-  background-color: #55434361;
-} */
-
 .ol-control.ol-layerswitcher .panel-container {
   background-color: #55434361;
 }

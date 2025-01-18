@@ -19,6 +19,8 @@ export default [
     rules: {
       "vue/multi-word-component-names": "off",
       "no-unused-vars": "warn",
+      "vue/html-self-closing": "off",
+      "vue/max-attributes-per-line": "off",
     },
   },
 ];
