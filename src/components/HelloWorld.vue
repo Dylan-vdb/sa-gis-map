@@ -11,8 +11,9 @@ import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
 import { fromLonLat } from "ol/proj";
 import LayerGroup from "ol/layer/Group";
+
 import LayerSwitcher from "ol-ext/control/LayerSwitcher";
-// import LayerSwitcher from "ol-layerswitcher";
+import AnimatedCluster from "ol-ext/layer/AnimatedCluster";
 
 // Import clustering related modules
 import Feature from "ol/Feature";
@@ -53,6 +54,16 @@ const createFeatures = () => {
     return feature;
   });
 };
+
+const clusterSource = new VectorSource({
+  features: [], // Add your features here
+});
+
+// const animatedClusterLayer = new AnimatedCluster({
+//   source: clusterSource,
+//   animationDuration: 1000,
+//   distance: 20,
+// });
 
 const markerStyle = new Style({
   image: new Icon({
@@ -155,9 +166,17 @@ onMounted(() => {
     type: "overlay",
   });
 
+  const animatedClusterLayer = new AnimatedCluster({
+    source: clusterSource,
+    animationDuration: 1000,
+    style: clusterStyle,
+    title: "Markers",
+    distance: 20,
+  });
+
   const map = new Map({
     target: mapElement.value,
-    layers: [baseLayerGroup, vectorLayer],
+    layers: [baseLayerGroup, animatedClusterLayer],
     view: new View({
       center: fromLonLat([0, 0]),
       zoom: 2,
