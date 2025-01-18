@@ -1,6 +1,7 @@
 <script setup>
 import "ol/ol.css";
-import "ol-layerswitcher/dist/ol-layerswitcher.css";
+// import "ol-layerswitcher/dist/ol-layerswitcher.css";
+import "ol-ext/dist/ol-ext.css";
 
 import { onMounted, ref } from "vue";
 import Map from "ol/Map";
@@ -10,12 +11,96 @@ import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
 import { fromLonLat } from "ol/proj";
 import LayerGroup from "ol/layer/Group";
-import LayerSwitcher from "ol-layerswitcher";
+import LayerSwitcher from "ol-ext/control/LayerSwitcher";
+// import LayerSwitcher from "ol-layerswitcher";
+
+// Import clustering related modules
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+import Cluster from "ol/source/Cluster";
+import {
+  Circle as CircleStyle,
+  Fill,
+  Stroke,
+  Style,
+  Icon,
+  Text,
+} from "ol/style";
+
+import marker from "@/assets/map-pin.png";
+import markerShadow from "@/assets/marker-shadow.png";
 
 // Reference to hold the map instance
 const mapElement = ref(null);
 
-// Create the base layers with titles
+// Create sample marker data (replace with your actual data)
+const markers = [
+  { lon: -0.12, lat: 51.51, name: "London" },
+  { lon: 2.35, lat: 48.86, name: "Paris" },
+  { lon: 13.41, lat: 52.52, name: "Berlin" },
+  // Add more markers as needed
+];
+
+// Create features from marker data
+const createFeatures = () => {
+  return markers.map((marker) => {
+    const feature = new Feature({
+      geometry: new Point(fromLonLat([marker.lon, marker.lat])),
+      name: marker.name,
+    });
+    return feature;
+  });
+};
+
+const markerStyle = new Style({
+  image: new Icon({
+    anchor: [0.5, 1],
+    anchorXUnits: "fraction",
+    anchorYUnits: "fraction",
+    src: marker,
+    width: 40,
+    height: 40,
+    displacement: [0, 0],
+  }),
+});
+
+// Style function for clusters
+const styleCache = {};
+const clusterStyle = (feature) => {
+  const size = feature.get("features").length;
+  let style = styleCache[size];
+
+  if (!style) {
+    if (size === 1) {
+      // Single marker style
+      return markerStyle;
+    }
+    // Cluster style
+    style = new Style({
+      image: new CircleStyle({
+        radius: 15,
+        stroke: new Stroke({
+          color: "#fff",
+        }),
+        fill: new Fill({
+          color: "#3399CC",
+        }),
+      }),
+      text: new Text({
+        text: size.toString(),
+        fill: new Fill({
+          color: "#fff",
+        }),
+      }),
+    });
+    styleCache[size] = style;
+  }
+  return style;
+};
+
+// Create base layers
 const osmLayer = new TileLayer({
   source: new OSM(),
   title: "OpenStreetMap",
@@ -25,7 +110,6 @@ const osmLayer = new TileLayer({
 
 const satelliteLayer = new TileLayer({
   source: new XYZ({
-    // Using ESRI World Imagery
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     maxZoom: 19,
     attributions: "Powered by ESRI",
@@ -52,9 +136,28 @@ const baseLayerGroup = new LayerGroup({
 });
 
 onMounted(() => {
+  // Create vector source with features
+  const vectorSource = new VectorSource({
+    features: createFeatures(),
+  });
+
+  // Create cluster source
+  const clusterSource = new Cluster({
+    distance: 40,
+    source: vectorSource,
+  });
+
+  // Create vector layer with clusters
+  const vectorLayer = new VectorLayer({
+    source: clusterSource,
+    style: clusterStyle,
+    title: "Markers",
+    type: "overlay",
+  });
+
   const map = new Map({
     target: mapElement.value,
-    layers: [baseLayerGroup],
+    layers: [baseLayerGroup, vectorLayer],
     view: new View({
       center: fromLonLat([0, 0]),
       zoom: 2,
@@ -63,15 +166,13 @@ onMounted(() => {
 
   // Add the LayerSwitcher control
   const layerSwitcher = new LayerSwitcher({
-    tipLabel: "Layer Switcher", // Optional: Tooltip text
-    groupSelectStyle: "group", // Optional: 'group' or 'none' - determines whether entire groups can be toggled
-    startActive: true, // Optional: Whether the control should be open when first added to the map
+    collapsed: false,
+    mouseover: true,
   });
 
   map.addControl(layerSwitcher);
 });
 </script>
-
 <template>
   <div ref="mapElement" class="map"></div>
 </template>
@@ -84,15 +185,11 @@ onMounted(() => {
 </style>
 
 <style>
-.layer-switcher .panel {
-  margin: 0;
-  border: 4px solid #eee;
-  border-radius: 4px;
+/* .ol-layerswitcher .panel-container {
   background-color: #55434361;
-  display: none;
-  max-height: inherit;
-  height: 100%;
-  box-sizing: border-box;
-  overflow-y: auto;
+} */
+
+.ol-control.ol-layerswitcher .panel-container {
+  background-color: #55434361;
 }
 </style>
