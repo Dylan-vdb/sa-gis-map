@@ -1,7 +1,5 @@
 <template>
-  <HelloWorld />
+  <MainMap />
 </template>
 
-<script setup>
-  //
-</script>
+<script setup></script>
