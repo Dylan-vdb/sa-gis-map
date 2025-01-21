@@ -29,7 +29,7 @@ export function generateSACoordinates(count) {
     const lat = randomBetween(SA_BOUNDS.south, SA_BOUNDS.north);
     const lon = randomBetween(SA_BOUNDS.west, SA_BOUNDS.east);
 
-    coordinates.push({ lat, lon, name: i });
+    coordinates.push({ lat, lon, name: String(i) });
   }
 
   return coordinates;

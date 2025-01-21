@@ -12,6 +12,7 @@ import Shadow from "ol-ext/style/Shadow";
 
 // Import clustering related modules
 import Feature from "ol/Feature";
+import Overlay from "ol/Overlay";
 import Point from "ol/geom/Point";
 import VectorSource from "ol/source/Vector";
 import Cluster from "ol/source/Cluster";
@@ -24,29 +25,46 @@ import {
   Text,
 } from "ol/style";
 
+import * as turf from "@turf/turf";
+
 import markerCattle from "@/assets/marker-cattle.svg";
-import { generateSACoordinates } from "./generateSACoordinatess";
 
 let map;
-// Create sample marker data (replace with your actual data)
 
-// Create features from marker data
-export const createFeatures = (markers) => {
-  return markers.map((marker) => {
-    const feature = new Feature({
-      geometry: new Point(fromLonLat([marker.lon, marker.lat])),
-      name: marker.name,
-    });
-    return feature;
-  });
-};
+export function generateRandomPoints(polygon, numPoints) {
+  const bbox = turf.bbox(polygon); // Get the bounding box of the polygon
+  const points = [];
+
+  while (points.length < numPoints) {
+    const randomPoint = turf.randomPoint(1, { bbox: bbox });
+    var pt = turf.point(randomPoint.features[0].geometry.coordinates);
+    var poly = turf.polygon(polygon.features[0].geometry.coordinates);
+
+    if (turf.booleanPointInPolygon(pt, poly)) {
+      points.push(randomPoint.features[0]);
+    }
+  }
+  return points.map((point) => ({
+    lat: point.geometry.coordinates[1],
+    lon: point.geometry.coordinates[0],
+  }));
+}
 
 export const addCattleMarkers = (markers) => {
   // Create vector source with features
-  const vectorSource = new VectorSource({
-    features: createFeatures(markers),
-  });
+  const vectorSource = new VectorSource();
 
+  markers.forEach((marker) => {
+    const feature = new Feature({
+      geometry: new Point(fromLonLat([marker.lon, marker.lat])),
+    });
+    feature.setProperties({
+      name: String(marker.name),
+      description: marker.description,
+    });
+    feature.setId(marker.name);
+    vectorSource.addFeature(feature);
+  });
   // Create cluster source
   const clusterSource = new Cluster({
     distance: 40,
@@ -120,6 +138,57 @@ export const addCattleMarkers = (markers) => {
   });
   map.addLayer(animatedClusterLayer);
 };
+
+export function addPopups(PopupComponent, popupContainer, createApp, h) {
+  const popup = new Overlay({
+    element: popupContainer.value,
+    positioning: "bottom-center",
+    stopEvent: false,
+  });
+
+  map.addOverlay(popup);
+
+  map.on("click", (evt) => {
+    const feature = map.forEachFeatureAtPixel(evt.pixel, (feature) => {
+      console.log("id", feature.getId());
+
+      return feature;
+    });
+    const clusteredFeatures = feature?.get("features");
+
+    if (clusteredFeatures?.length === 1) {
+      const markerFeature = clusteredFeatures[0];
+      const coordinates = markerFeature.getGeometry().getCoordinates();
+      popup.setPosition(coordinates);
+      console.log(markerFeature.get("description"));
+      // Render the popup component dynamically
+
+      const app = createApp({
+        render() {
+          return h(PopupComponent, {
+            name: markerFeature.get("name"),
+            description: markerFeature.get("description"),
+          });
+        },
+      });
+
+      app.mount(popupContainer.value);
+
+      // Adjust the map view to ensure the popup is fully visible
+      const view = map.getView();
+      const offset = 0.2; // Offset factor (e.g., 20% of map height)
+      const resolution = view.getResolution();
+      const size = map.getSize();
+      const newCenter = [
+        coordinates[0],
+        coordinates[1] + offset * size[1] * resolution,
+      ];
+      view.animate({ center: newCenter, duration: 500 });
+    } else {
+      popup.setPosition(undefined);
+    }
+  });
+}
 
 export function initializeMap(mapElement) {
   // Create base layers
