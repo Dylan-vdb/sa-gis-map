@@ -28,7 +28,7 @@ import {
 import * as turf from "@turf/turf";
 
 import markerCattle from "@/assets/marker-cattle.svg";
-
+import { nextTick } from "vue";
 let map;
 
 export function generateRandomPoints(polygon, numPoints) {
@@ -50,9 +50,35 @@ export function generateRandomPoints(polygon, numPoints) {
   }));
 }
 
+export async function replaceMarkers(markersData) {
+  const existingMarkers = map.getLayers();
+  map.removeLayer(animatedClusterLayer);
+  animatedClusterLayer = undefined;
+
+  // Wait a moment before adding the new layer
+  // setTimeout(() => {
+  addCattleMarkers(markersData);
+  // }, 1000); // Adjust the delay as needed
+
+  // markers.clearLayers();
+  // markers = L.markerClusterGroup();
+
+  // newMarkers.forEach((location) => {
+  //   const each_marker = new L.marker([location.Latitude, location.Longitude], {
+  //     icon: myIcon,
+  //   }).bindPopup(
+  //     `<strong> ${location.Title} </strong> <br> ${location.Description}`
+  //   );
+  //   markers.addLayer(each_marker);
+  // });
+
+  // map.value.addLayer(markers);
+}
+
+let animatedClusterLayer;
 export const addCattleMarkers = (markers) => {
+  let markerLayer = new VectorSource();
   // Create vector source with features
-  const vectorSource = new VectorSource();
 
   markers.forEach((marker) => {
     const feature = new Feature({
@@ -63,12 +89,12 @@ export const addCattleMarkers = (markers) => {
       description: marker.description,
     });
     feature.setId(marker.name);
-    vectorSource.addFeature(feature);
+    markerLayer.addFeature(feature);
   });
   // Create cluster source
   const clusterSource = new Cluster({
     distance: 40,
-    source: vectorSource,
+    source: markerLayer,
   });
 
   const markerStyle = [
@@ -129,7 +155,7 @@ export const addCattleMarkers = (markers) => {
     return style;
   };
 
-  const animatedClusterLayer = new AnimatedCluster({
+  animatedClusterLayer = new AnimatedCluster({
     source: clusterSource,
     animationDuration: 700,
     style: clusterStyle,

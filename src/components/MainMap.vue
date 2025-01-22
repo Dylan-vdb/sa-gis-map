@@ -3,7 +3,7 @@ import "ol/ol.css";
 
 import "ol-ext/dist/ol-ext.css";
 import "ol-ext/style/FontMakiDef.js";
-import { onMounted, ref, createApp, h } from "vue";
+import { onMounted, ref, watch, createApp, h } from "vue";
 import PopupComponent from "@/components/MarkerPopup.vue";
 import mapData from "@/assets/Western_Cape.json";
 
@@ -12,10 +12,13 @@ import {
   addCattleMarkers,
   addPopups,
   generateRandomPoints,
+  replaceMarkers,
 } from "@/helpers/openlayers";
 
 import { useAppStore } from "@/stores/app";
 const store = useAppStore();
+
+watch(() => store.markers, replaceMarkers);
 
 // Reference to hold the map instance
 const mapElement = ref(null);
@@ -54,5 +57,6 @@ onMounted(() => {
 
 #popup-container {
   margin-bottom: 50px;
+  max-width: 500px;
 }
 </style>

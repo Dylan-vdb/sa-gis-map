@@ -26,7 +26,8 @@ async function onDrop(files) {
   const rawData = await parseCsv(files[0], {
     skipEmptyLines: true,
   });
-  store.markers = rawData.result.data.filter((row) => row?.Title);
+
+  store.markers = rawData.result.data.filter((row) => row?.name);
 }
 
 function parseCsv(csvFile) {
