@@ -5,7 +5,6 @@ import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
 import { fromLonLat } from "ol/proj";
 import LayerGroup from "ol/layer/Group";
-
 import LayerSwitcher from "ol-ext/control/LayerSwitcher";
 import AnimatedCluster from "ol-ext/layer/AnimatedCluster";
 import Shadow from "ol-ext/style/Shadow";
@@ -28,7 +27,7 @@ import {
 import * as turf from "@turf/turf";
 
 import markerCattle from "@/assets/marker-cattle.svg";
-import { nextTick } from "vue";
+
 let map;
 
 export function generateRandomPoints(polygon, numPoints) {
@@ -49,35 +48,19 @@ export function generateRandomPoints(polygon, numPoints) {
     lon: point.geometry.coordinates[0],
   }));
 }
+let markerId;
 
 export async function replaceMarkers(markersData) {
   const existingMarkers = map.getLayers();
   map.removeLayer(animatedClusterLayer);
   animatedClusterLayer = undefined;
 
-  // Wait a moment before adding the new layer
-  // setTimeout(() => {
   addCattleMarkers(markersData);
-  // }, 1000); // Adjust the delay as needed
-
-  // markers.clearLayers();
-  // markers = L.markerClusterGroup();
-
-  // newMarkers.forEach((location) => {
-  //   const each_marker = new L.marker([location.Latitude, location.Longitude], {
-  //     icon: myIcon,
-  //   }).bindPopup(
-  //     `<strong> ${location.Title} </strong> <br> ${location.Description}`
-  //   );
-  //   markers.addLayer(each_marker);
-  // });
-
-  // map.value.addLayer(markers);
 }
 
-let animatedClusterLayer;
+let animatedClusterLayer, markerLayer;
 export const addCattleMarkers = (markers) => {
-  let markerLayer = new VectorSource();
+  markerLayer = new VectorSource();
   // Create vector source with features
 
   markers.forEach((marker) => {
@@ -127,6 +110,12 @@ export const addCattleMarkers = (markers) => {
     const size = feature.get("features").length;
     let style = styleCache[size];
 
+    // Handle Popup
+    const featureIds = feature.get("features").map((f) => f.getId());
+    if (featureIds.includes(markerId) && size > 1 && popup && markerId) {
+      popup.setPosition(undefined);
+    }
+
     if (!style) {
       if (size === 1) {
         // Single marker style
@@ -163,10 +152,16 @@ export const addCattleMarkers = (markers) => {
     distance: 20,
   });
   map.addLayer(animatedClusterLayer);
-};
 
+  // Listen for change events on the vector layer
+  // animatedClusterLayer.on("change", function (event) {
+  //   // console.log("Layer changed:", event);
+  //   // You can call your callback function here}
+  // });
+};
+let popup;
 export function addPopups(PopupComponent, popupContainer, createApp, h) {
-  const popup = new Overlay({
+  popup = new Overlay({
     element: popupContainer.value,
     positioning: "bottom-center",
     stopEvent: false,
@@ -180,10 +175,12 @@ export function addPopups(PopupComponent, popupContainer, createApp, h) {
 
       return feature;
     });
+
     const clusteredFeatures = feature?.get("features");
 
     if (clusteredFeatures?.length === 1) {
       const markerFeature = clusteredFeatures[0];
+
       const coordinates = markerFeature.getGeometry().getCoordinates();
       popup.setPosition(coordinates);
       console.log(markerFeature.get("description"));
