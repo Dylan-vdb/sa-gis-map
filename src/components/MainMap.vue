@@ -18,7 +18,13 @@ import {
 import { useAppStore } from "@/stores/app";
 const store = useAppStore();
 
-watch(() => store.markers, replaceMarkers);
+watch(
+  () => store.markers,
+  (markers) => {
+    replaceMarkers(markers);
+    addPopups(PopupComponent, popupContainer, createApp, h);
+  }
+);
 
 // Reference to hold the map instance
 const mapElement = ref(null);

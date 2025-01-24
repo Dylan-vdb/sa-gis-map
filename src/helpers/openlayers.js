@@ -28,7 +28,7 @@ import * as turf from "@turf/turf";
 
 import markerCattle from "@/assets/marker-cattle.svg";
 
-let map;
+let map, markerId, animatedClusterLayer, markerLayer, popup;
 
 export function generateRandomPoints(polygon, numPoints) {
   const bbox = turf.bbox(polygon); // Get the bounding box of the polygon
@@ -48,17 +48,14 @@ export function generateRandomPoints(polygon, numPoints) {
     lon: point.geometry.coordinates[0],
   }));
 }
-let markerId;
 
 export async function replaceMarkers(markersData) {
   const existingMarkers = map.getLayers();
   map.removeLayer(animatedClusterLayer);
-  animatedClusterLayer = undefined;
-
+  markerId = animatedClusterLayer = markerLayer = popup = undefined;
   addCattleMarkers(markersData);
 }
 
-let animatedClusterLayer, markerLayer;
 export const addCattleMarkers = (markers) => {
   markerLayer = new VectorSource();
   // Create vector source with features
@@ -159,11 +156,12 @@ export const addCattleMarkers = (markers) => {
   //   // You can call your callback function here}
   // });
 };
-let popup;
+
 export function addPopups(PopupComponent, popupContainer, createApp, h) {
   popup = new Overlay({
     element: popupContainer.value,
     positioning: "bottom-center",
+
     stopEvent: false,
   });
 

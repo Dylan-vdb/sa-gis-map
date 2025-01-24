@@ -13,6 +13,7 @@
     "@mdi/font": "7.4.47",
     "@turf/turf": "^7.2.0",
     "@vueuse/core": "^12.4.0",
+    "animate.css": "^4.1.1",
     "ol": "^10.3.1",
     "ol-ext": "^4.0.24",
     "papaparse": "^5.5.1",
