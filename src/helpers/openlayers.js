@@ -180,7 +180,7 @@ export function addPopups(PopupComponent, popupContainer, createApp, h) {
 
     if (clusteredFeatures?.length === 1) {
       const markerFeature = clusteredFeatures[0];
-
+      markerId = markerFeature.getId();
       const coordinates = markerFeature.getGeometry().getCoordinates();
       popup.setPosition(coordinates);
       console.log(markerFeature.get("description"));
