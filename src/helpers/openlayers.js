@@ -67,6 +67,7 @@ export const addCattleMarkers = (markers) => {
     feature.setProperties({
       name: String(marker.name),
       description: marker.description,
+      image: marker.image,
     });
     feature.setId(marker.name);
     markerLayer.addFeature(feature);
@@ -189,6 +190,7 @@ export function addPopups(PopupComponent, popupContainer, createApp, h) {
           return h(PopupComponent, {
             name: markerFeature.get("name"),
             description: markerFeature.get("description"),
+            image: markerFeature.get("image"),
           });
         },
       });

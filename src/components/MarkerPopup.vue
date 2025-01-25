@@ -1,7 +1,12 @@
 <template>
   <div class="popup">
-    <h3>{{ name }}</h3>
-    <p>{{ description }}</p>
+    <div class="popup-content">
+      <div class="popup-text">
+        <h3>{{ name }}</h3>
+        <p>{{ description }}</p>
+      </div>
+      <img v-if="image" :src="image" class="popup-image" />
+    </div>
   </div>
 </template>
 
@@ -10,6 +15,7 @@ import { defineProps } from "vue";
 
 const props = defineProps({
   name: String,
+  image: String,
   description: String,
 });
 </script>
@@ -39,5 +45,22 @@ const props = defineProps({
   border-color: white transparent transparent transparent; /* Arrow pointing up */ /* Optional: Add shadow for arrow */
   box-shadow: -1px 1px 2px rgba(0, 0, 0, 0.1);
   z-index: -1; /* Ensure the arrow is below the popup */
+}
+
+.popup-content {
+  display: flex;
+  align-items: top; /* Aligns items vertically centered */
+}
+
+.popup-image {
+  width: 200px; /* Set the width of the image */
+  height: 200px;
+  margin-left: 10px; /* Space between the image and text */
+  object-fit: cover; /* Ensures the image covers the area while maintaining aspect ratio */
+  border-radius: 10px; /* Adjust this value for more or less rounding */
+}
+
+.popup-text {
+  flex: 1; /* Allows the text to take up remaining space */
 }
 </style>
