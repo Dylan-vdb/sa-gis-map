@@ -8,7 +8,7 @@
     <v-navigation-drawer v-model="drawer" :style="{ padding: '12px' }">
       <FileDropZone />
     </v-navigation-drawer>
-    <v-main>
+    <v-main class="pt-16">
       <RouterView />
     </v-main>
   </v-app>
