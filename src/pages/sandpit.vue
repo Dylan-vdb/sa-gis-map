@@ -8,8 +8,6 @@
 import "ol/ol.css";
 import { onMounted, ref, onUnmounted, watchEffect } from "vue";
 
-import { SVG } from "@svgdotjs/svg.js";
-
 import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
@@ -18,7 +16,9 @@ import Layer from "ol/layer/Layer";
 import { transform, transformExtent } from "ol/proj";
 import { useGeographic } from "ol/proj";
 import DurbanSvg from "@/assets/durban.svg";
-import HouseFloorPlan from "@/assets/house-floor-plan2.svg";
+import HouseFloorPlan from "@/assets/house-floor-plan.svg";
+
+import { placeSvgOnMap, drawSvg, drawCircle } from "@/helpers/svgMapLayer";
 
 import { useMapState } from "@/composables/useMapState"; // Adjust the path as necessary
 
@@ -37,6 +37,7 @@ const extentCoords = [
 ];
 
 onMounted(() => {
+  houseFloorPlan.value.$el.setAttribute("id", "house-floor-plan");
   if (!mapElement.value) return;
 
   map.value = new Map({
@@ -52,9 +53,6 @@ onMounted(() => {
     }),
   });
 
-  const extentPixels = extentCoords.map((coord) =>
-    map.value.getPixelFromCoordinate(transform(coord, "EPSG:4326", "EPSG:3857"))
-  );
   // Create the SVG element (outside the render function for efficiency)
   svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.style.position = "absolute";
@@ -63,8 +61,6 @@ onMounted(() => {
 
   svgLayer = new Layer({
     render: function (frameState) {
-      // console.log("frameState ", frameState);
-
       svg.setAttribute("width", frameState.size[0]);
       svg.setAttribute("height", frameState.size[1]);
 
@@ -72,26 +68,8 @@ onMounted(() => {
       while (svg.firstChild) {
         svg.removeChild(svg.firstChild);
       }
-      drawExtentRectangle(svg, map.value, extentCoords);
-      // Transform extent coordinates to pixel coordinates
-
-      // const extentPixels = extentCoords.map((coord) =>
-      //   map.value.getPixelFromCoordinate(
-      //     transform(coord, "EPSG:4326", "EPSG:3857")
-      //   )
-      // );
-
-      // // Draw extent rectangle
-      // if (extentPixels.every((pixel) => pixel !== null)) {
-      //   debugger;
-      //   const x = Math.min(...extentPixels.map((p) => p[0]));
-      //   const y = Math.min(...extentPixels.map((p) => p[1]));
-      //   const width = Math.max(...extentPixels.map((p) => p[0])) - x;
-      //   const height = Math.max(...extentPixels.map((p) => p[1])) - y;
-
-      //   drawRectangle(svg, x, y, width, height, "rgba(255, 0, 0, 0.5)");
-      //   drawSvg(svg, houseFloorPlan.value.$el, x, y, width, height);
-      // }
+      // drawExtentRectangle(svg, map.value, extentCoords);
+      placeSvgOnMap(svg, houseFloorPlan.value.$el, map.value, extentCoords);
 
       // Example 2: Circle over George (for specific location testing)
       const georgeCoord = [22.46, -33.96]; // Longitude, Latitude for George
@@ -133,17 +111,17 @@ onMounted(() => {
           );
         }
 
-        if (extentPixels.every((pixel) => pixel !== null)) {
-          // Check if all pixels are valid
-          const x = Math.min(...extentPixels.map((p) => p[0]));
-          const y = -Math.max(...extentPixels.map((p) => p[1])); // Invert y for SVG
-          const width = Math.max(...extentPixels.map((p) => p[0])) - x;
-          const height = Math.abs(
-            Math.min(...extentPixels.map((p) => p[1])) - -y
-          ); // Positive height
+        // if (extentPixels.every((pixel) => pixel !== null)) {
+        //   // Check if all pixels are valid
+        //   const x = Math.min(...extentPixels.map((p) => p[0]));
+        //   const y = -Math.max(...extentPixels.map((p) => p[1])); // Invert y for SVG
+        //   const width = Math.max(...extentPixels.map((p) => p[0])) - x;
+        //   const height = Math.abs(
+        //     Math.min(...extentPixels.map((p) => p[1])) - -y
+        //   ); // Positive height
 
-          drawRectangle(svg, x, y, width, height, "rgba(255, 0, 0, 0.5)"); // Red with transparency
-        }
+        //   drawRectangle(svg, x, y, width, height, "rgba(255, 0, 0, 0.5)"); // Red with transparency
+        // }
       }
       return svg; // Return the canvas (important for OpenLayers internal rendering)
     },
@@ -169,39 +147,6 @@ onMounted(() => {
 
 const { zoomLevel, mapBounds, mapCenter } = useMapState(map);
 
-function drawCircle(svg, pixelCoord, color, radius) {
-  const circle = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "circle"
-  );
-  circle.setAttribute("cx", pixelCoord[0]);
-  circle.setAttribute("cy", pixelCoord[1]);
-  circle.setAttribute("r", radius);
-  circle.setAttribute("fill", color);
-  svg.appendChild(circle);
-}
-
-function drawRectangle(svg, x, y, width, height, color) {
-  const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  rect.setAttribute("x", x);
-  rect.setAttribute("y", y);
-  rect.setAttribute("width", width);
-  rect.setAttribute("height", height);
-  rect.setAttribute("fill", color);
-  rect.setAttribute("fill-opacity", 0.3); // Add some transparency
-  rect.setAttribute("stroke", color);
-  rect.setAttribute("stroke-width", 2);
-  svg.appendChild(rect);
-}
-
-function drawSvg(parentSvg, childSvg, x, y, width, height) {
-  childSvg.setAttribute("x", x);
-  childSvg.setAttribute("y", y);
-  childSvg.setAttribute("width", width);
-  childSvg.setAttribute("height", height);
-  parentSvg.appendChild(childSvg);
-}
-
 onUnmounted(() => {
   if (map.value) {
     map.value.setTarget(undefined);
@@ -213,33 +158,10 @@ onUnmounted(() => {
     }
   }
 });
-
-function drawExtentRectangle(svg, map, extentCoords) {
-  // Transform extent coordinates to pixel coordinates
-  const extentPixels = extentCoords.map((coord) =>
-    map.getPixelFromCoordinate(transform(coord, "EPSG:4326", "EPSG:3857"))
-  );
-
-  // Ensure all pixels are valid
-  if (extentPixels.every((pixel) => pixel !== null)) {
-    // Calculate rectangle dimensions
-
-    const x = extentPixels[0][0];
-    const y = extentPixels[0][1]; // Invert y for SVG
-    const width = Math.max(...extentPixels.map((p) => p[0])) - x;
-    const height = Math.abs(Math.min(...extentPixels.map((p) => p[1])) - y);
-
-    // Create and style the rectangle
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute("x", x);
-    rect.setAttribute("y", y);
-    rect.setAttribute("width", width);
-    rect.setAttribute("height", height);
-    rect.setAttribute("fill", "rgba(255, 0, 0, 0.5)");
-    rect.setAttribute("stroke", "red");
-    rect.setAttribute("stroke-width", 2);
-
-    svg.appendChild(rect);
-  }
-}
 </script>
+
+<style>
+#house-floor-plan rect {
+  display: none;
+}
+</style>
