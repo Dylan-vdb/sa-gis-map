@@ -23,6 +23,7 @@ import {
   Icon,
   Text,
 } from "ol/style";
+import { transform } from "ol/proj";
 
 import * as turf from "@turf/turf";
 
@@ -61,8 +62,13 @@ export const addCattleMarkers = (markers) => {
   // Create vector source with features
 
   markers.forEach((marker) => {
+    const transformedCoords = transform(
+      [marker.lon, marker.lat],
+      "EPSG:3857",
+      "EPSG:4326"
+    );
     const feature = new Feature({
-      geometry: new Point(fromLonLat([marker.lon, marker.lat])),
+      geometry: new Point(transformedCoords),
     });
     feature.setProperties({
       name: String(marker.name),
@@ -255,6 +261,7 @@ export function initializeMap(mapElement) {
     view: new View({
       center: fromLonLat([0, 0]),
       zoom: 2,
+      // projection: "EPSG:4326",
     }),
   });
 
