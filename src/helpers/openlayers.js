@@ -3,12 +3,12 @@ import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
-import { fromLonLat } from "ol/proj";
 import LayerGroup from "ol/layer/Group";
+import { fromLonLat, transform, transformExtent } from "ol/proj";
 import LayerSwitcher from "ol-ext/control/LayerSwitcher";
 import AnimatedCluster from "ol-ext/layer/AnimatedCluster";
 import Shadow from "ol-ext/style/Shadow";
-
+import Layer from "ol/layer/Layer";
 // Import clustering related modules
 import Feature from "ol/Feature";
 import Overlay from "ol/Overlay";
@@ -23,11 +23,11 @@ import {
   Icon,
   Text,
 } from "ol/style";
-import { transform } from "ol/proj";
 
 import * as turf from "@turf/turf";
 
-import markerCattle from "@/assets/marker-cattle.svg";
+import { placeSvgOnMap, drawSvg, drawCircle } from "@/helpers/svgMapLayer";
+import markerCattle from "@/assets/marker-cattle.svg?url";
 
 let map, markerId, animatedClusterLayer, markerLayer, popup;
 
@@ -62,13 +62,8 @@ export const addCattleMarkers = (markers) => {
   // Create vector source with features
 
   markers.forEach((marker) => {
-    const transformedCoords = transform(
-      [marker.lon, marker.lat],
-      "EPSG:3857",
-      "EPSG:4326"
-    );
     const feature = new Feature({
-      geometry: new Point(transformedCoords),
+      geometry: new Point(fromLonLat([marker.lon, marker.lat])),
     });
     feature.setProperties({
       name: String(marker.name),
@@ -261,7 +256,6 @@ export function initializeMap(mapElement) {
     view: new View({
       center: fromLonLat([0, 0]),
       zoom: 2,
-      // projection: "EPSG:4326",
     }),
   });
 
@@ -272,4 +266,49 @@ export function initializeMap(mapElement) {
   });
 
   map.addControl(layerSwitcher);
+}
+
+export function addSvgLayer(childSvg, extentCoords) {
+  // Create the SVG element (outside the render function for efficiency)
+  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.style.position = "absolute";
+  svg.style.top = "0";
+  svg.style.left = "0";
+
+  let svgLayer = new Layer({
+    render: function (frameState) {
+      svg.setAttribute("width", frameState.size[0]);
+      svg.setAttribute("height", frameState.size[1]);
+
+      // Clear previous SVG content
+      while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+      }
+      // drawExtentRectangle(svg, map.value, extentCoords);
+      placeSvgOnMap(svg, childSvg, map, extentCoords);
+
+      return svg; // Return the canvas (important for OpenLayers internal rendering)
+    },
+  });
+
+  map.addLayer(svgLayer);
+
+  map.once("loadend", () => {
+    // Correctly create the extent using an array
+    // flyToExtents(extentCoords);
+  });
+}
+
+export function flyToExtents(extentCoords) {
+  const extent = [
+    Math.min(...extentCoords.map((c) => c[0])), // minX
+    Math.min(...extentCoords.map((c) => c[1])), // minY
+    Math.max(...extentCoords.map((c) => c[0])), // maxX
+    Math.max(...extentCoords.map((c) => c[1])), // maxY
+  ];
+
+  map.getView().fit(transformExtent(extent, "EPSG:4326", "EPSG:3857"), {
+    duration: 2000,
+    padding: [50, 50, 50, 50],
+  });
 }

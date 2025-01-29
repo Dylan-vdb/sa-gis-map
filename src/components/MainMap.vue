@@ -1,3 +1,9 @@
+<template>
+  <div ref="mapElement" class="map"></div>
+  <div id="popup-container" ref="popupContainer"></div>
+  <HouseFloorPlan ref="houseFloorPlan" />
+</template>
+
 <script setup>
 import "ol/ol.css";
 
@@ -13,9 +19,15 @@ import {
   addPopups,
   generateRandomPoints,
   replaceMarkers,
+  addSvgLayer,
 } from "@/helpers/openlayers";
 
 import { useAppStore } from "@/stores/app";
+import HouseFloorPlan from "@/assets/house-floor-plan.svg";
+import { FLOOR_PLAN_EXTENTS } from "@/helpers/constants";
+
+const houseFloorPlan = ref(null);
+
 const store = useAppStore();
 
 watch(
@@ -42,12 +54,9 @@ onMounted(() => {
   initializeMap(mapElement);
   addCattleMarkers(markers);
   addPopups(PopupComponent, popupContainer, createApp, h);
+  addSvgLayer(houseFloorPlan.value.$el, FLOOR_PLAN_EXTENTS);
 });
 </script>
-<template>
-  <div ref="mapElement" class="map"></div>
-  <div id="popup-container" ref="popupContainer"></div>
-</template>
 
 <style scoped>
 .map {
