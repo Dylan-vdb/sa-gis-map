@@ -21,7 +21,7 @@
           have to take detailed vector drawings and make them part of the map.
         </p>
         <v-btn class="mb-6" color="primary" @click="flyToHouseFloorPlan"
-          >Fly to House Floor Plan</v-btn
+          >Fly to Floor Plan</v-btn
         >
       </div>
     </v-navigation-drawer>

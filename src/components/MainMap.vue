@@ -66,6 +66,14 @@ onMounted(() => {
 </style>
 
 <style>
+#text1 {
+  transition: transform 0.2s ease; /* Smooth transition for scaling */
+}
+
+#text1:hover {
+  fill: white; /* Slightly scale up the element */
+}
+
 .ol-control.ol-layerswitcher .panel-container {
   background-color: #55434361;
 }
