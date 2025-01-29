@@ -5,23 +5,25 @@
 
       <v-app-bar-title>Example Map Application</v-app-bar-title>
     </v-app-bar>
-    <v-navigation-drawer v-model="drawer" :style="{ padding: '12px' }">
-      <h4>CSV File Markers</h4>
-      <p class="mb-4">
-        Here we can drop a csv file of locations, headings, and descriptions for
-        markers on the map.
-      </p>
-      <FileDropZone class="mb-6" />
+    <v-navigation-drawer class="pl-3 pt-3" v-model="drawer">
+      <div class="mr-2">
+        <h4>CSV File Markers</h4>
+        <p class="mb-4">
+          Here we can drop a csv file of locations, headings, and descriptions
+          for markers on the map.
+        </p>
+        <FileDropZone class="mb-6" />
 
-      <v-divider></v-divider>
-      <h4 class="mt-6">Map Actions</h4>
-      <p class="mb-4">
-        An example of flying to a specific part of the map, and the ability we
-        have to take detailed vector drawings and make them part of the map.
-      </p>
-      <v-btn class="mb-6" color="primary" @click="flyToHouseFloorPlan"
-        >Fly to House Floor Plan</v-btn
-      >
+        <v-divider></v-divider>
+        <h4 class="mt-6">Map Actions</h4>
+        <p class="mb-4">
+          An example of flying to a specific part of the map, and the ability we
+          have to take detailed vector drawings and make them part of the map.
+        </p>
+        <v-btn class="mb-6" color="primary" @click="flyToHouseFloorPlan"
+          >Fly to House Floor Plan</v-btn
+        >
+      </div>
     </v-navigation-drawer>
     <v-main class="pt-16">
       <RouterView />
